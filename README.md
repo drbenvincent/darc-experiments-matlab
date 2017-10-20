@@ -6,7 +6,7 @@
 
 This toolbox accompanies the paper:
 
-> Vincent, B. T. & Rainforth, T. (2017) The DARC Toolbox: automated, flexible, and efficient delayed and risky choice experiments using Bayesian adaptive design. (preprint available at XXXXX)
+> Vincent, B. T., & Rainforth, T. (2017, October 20). The DARC Toolbox: automated, flexible, and efficient delayed and risky choice experiments using Bayesian adaptive design. Retrieved from [psyarxiv.com/yehjb](https://psyarxiv.com/yehjb)
 
 ## Authors
 
