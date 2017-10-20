@@ -1,0 +1,14 @@
+*.m~
+*.aux
+*.log
+*.bbl
+*.gz
+*.DS_Store
+
+saved_human_data/*
+saved_simulated_data/*
+data/*
+figs/
+
+darc-toolbox/dependencies/export-fig/.ignore/*
+other_models_parameter_recovery.mat
