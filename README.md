@@ -38,8 +38,12 @@ To use this toolbox, you will need:
 
 For the moment, documentation is primarily in the form of:
 - code comments
-- demo matlab files
-- `README.md` docs
+- `README.md` docs, mainly this page that you are reading now.
+
+# Questions, comments, feature requests bug reports
+Feedback is very welcome. This can be done through:
+- A GitHub Issue, or
+- posting in our [darc-toolbox-matlab Google Group](https://groups.google.com/forum/#!forum/darc-toolbox-matlab)
 
 # Installation and quick start
 
