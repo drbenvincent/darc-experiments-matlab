@@ -243,7 +243,7 @@ time_model = Model_hyperbolic1_time('epsilon', 0.01);
 time_expt = Experiment(time_model);
 
 % set up probability discounting model and experiment
-prob_model = Model_hyperbolic1_time_prob('epsilon', 0.01);
+prob_model = Model_hyperbolic1_prob('epsilon', 0.01);
 prob_expt = Experiment(prob_model);
 
 % Can now call runOneTrial() method of each experiment object as you like
@@ -255,6 +255,41 @@ for trial = 1:30
     end
 end
 ```
+
+## How simultaneously fit multiple models
+The example above illustrates if we want to run a time discounting experiment, interleaved with a probability discounting. But what if we want to just focus on time discounting, and do simultaneous parameter estimation for the hyperbolic time discounting model and the exponential time discounting model?
+
+This is entirely doable and demonstrated in the example below. This example selects designs alternately from the exponential model and the hyperbolic models. But after each trial, we provide the design and response data to the other model, such that the posterior parameter estimates for both models is based upon _all_ the data collected.
+
+```matlab
+% create desired models and experiments
+exponentialModel = Model_exponential_time('epsilon', 0.01);
+hyperbolicModel = Model_hyperbolic1_time('epsilon', 0.01);
+
+exponentialExpt = Experiment(exponentialModel, 'plotting', 'full'); % a GUI dialogue box will appear
+hyperbolicExpt = Experiment(hyperbolicModel, 'plotting', 'full'); % a GUI dialogue box will appear
+
+% begin the adaptive experiments
+for trial = 1:30
+    if mod(trial,2) % run trial with exponential model on even trials
+        exponentialExpt = exponentialExpt.runOneTrial();
+		% update posteriors of other model(s) with this trial data
+		[last_design, last_response] = exponentialExpt.get_last_trial_info();
+		hyperbolicExpt = hyperbolicExpt.enterAgentResponse(last_design, last_response);
+	else % run trial with hyperbolic model on odd trials
+		hyperbolicExpt = hyperbolicExpt.runOneTrial();
+        % update posteriors of other model(s) with this trial data
+		[last_design, last_response] = hyperbolicExpt.get_last_trial_info();
+		exponentialExpt = exponentialExpt.enterAgentResponse(last_design, last_response);
+    end
+end
+```
+
+Note 1: This is _not_ optimally selecting designs to differentiate between models. Readers interested in this are referred to Cavagnaro et al (2016). Our approach as outlined in Vincent & Rainforth (in prep) can be extended to simultaneous parameter estimation, achieving a similar goal as in Cavagnaro et al (2016), but at this point we have not implemented it.
+
+Note 2: This is not the most elegant implementation. We may provide a smoother way to do this if it is something that people are keen on doing frequently.
+
+
 
 ## How to inject manually-specified trials
 It is possible to interleave both automatic and manually-specified trials. Below is an example of how to do this with the `runOneManualTrial` method.
@@ -388,6 +423,7 @@ The **darc-experiments-matlab** toolbox uses code from:
 
 
 # References
+Cavagnaro, D. R., Aranovich, G. J., McClure, S. M., Pitt, M. A., & Myung, J. I. (2016). On the functional form of temporal discounting: An optimized adaptive test. Journal of Risk and Uncertainty, 1–22.
 
 Frye, C. C. J., Galizio, A., Friedel, J. E., DeHart, W. B., and Odum, A. L. (2016). Measuring Delay Discounting in Humans Using an Adjusting Amount Task. Journal of Visualized Experiments, (107):1–8.
 
@@ -396,3 +432,5 @@ Green, L., & Myerson, J. (2004). A Discounting Framework for Choice With Delayed
 Kirby, K. N. (2009). One-year temporal stability of delay-discount rates. Psychonomic Bulletin & Review, 16(3):457–462.
 
 Vincent, B. T. (2016) [Hierarchical Bayesian estimation and hypothesis testing for delay discounting tasks](https://link.springer.com/article/10.3758/s13428-015-0672-2), Behavior Research Methods. 48(4), 1608-1620.
+
+Vincent, B. T., & Rainforth, T. (2017, October 20). The DARC Toolbox: automated, flexible, and efficient delayed and risky choice experiments using Bayesian adaptive design. Retrieved from [psyarxiv.com/yehjb](https://psyarxiv.com/yehjb)

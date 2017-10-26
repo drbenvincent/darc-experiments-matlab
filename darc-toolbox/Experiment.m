@@ -56,6 +56,7 @@ classdef Experiment
         all_responses
         all_reaction_times
         all_true_thetas_inc_fixed
+		response_objects
     end
     
     methods
@@ -84,6 +85,8 @@ classdef Experiment
             % Deal with expt_options for human experiments
             obj.expt_options = obj.setExperimentOptions(p);
             
+			obj.response_objects = [];
+			
             %% True theta #################################################
             % We are going to assume that all true_theta values are NaN by
             % default, but will overwrite these with any supplied values.
@@ -186,8 +189,8 @@ classdef Experiment
         
         function obj = runOneTrial(obj)
             chosen_design = obj.getNextDesign();
-            [choseLater, reaction_time] = obj.collect_response(chosen_design);
-            obj = obj.enterAgentResponse(chosen_design, choseLater, reaction_time);
+            response_object = obj.collect_response(chosen_design);
+            obj = obj.enterAgentResponse(chosen_design, response_object);
             obj.end_of_trial_plotting();
         end
         
@@ -238,13 +241,44 @@ classdef Experiment
 %         function data_table = get_data_table(obj)
 %             data_table = obj.data_table;
 %         end
+
+		function [last_design, last_response_object] = get_last_trial_info(obj)
+		% get the design and response object from the last trial. This is
+		% used when we want to provide design and response information from
+		% one model and provide it to another model.
+		last_design = obj.previous_designs(end,:);
+		last_response_object = obj.response_objects(end);
+		end
+		
         
         % SETTERS =========================================================
         
         function obj = set_human_response_options(obj, options)
             assert(iscellstr(options), 'provided options must be a cell array of strings')
             obj.human_response_options = options;
-        end
+		end
+		
+		        
+        function obj = enterAgentResponse(obj, chosen_design, response_object)
+            % Call this function once we have a response from an agent
+            
+            % append to data
+            obj.previous_designs = [obj.previous_designs; chosen_design];
+			obj.response_objects = [obj.response_objects response_object];
+            obj.all_responses = [obj.all_responses; response_object.didChooseB];
+            obj.all_reaction_times = [obj.all_reaction_times; response_object.reaction_time];
+            % must be called AFTER we've appended to previous_designs and all_responses
+            obj = obj.updateBeliefs();
+            
+            obj.export_current_point_estimates();
+            % Store summary data
+            obj = obj.updateThetaRecord();
+            
+            obj = obj.update_experiment_results();
+            % For extra caution, save response data after every response
+            obj.export_experiment_results();
+		end
+		
     end
     
     
@@ -290,45 +324,23 @@ classdef Experiment
         
         
         
-        function [responseDidChooseB, reaction_time] = collect_response(obj, chosen_design)
-            
-            switch obj.p.Results.agent
-                case{'simulated_agent'}
-                    response_data = obj.model.getSimulatedResponse(chosen_design, obj.true_theta);
-                    
-                case{'real_agent'}
-                    % TODO: now this is here, we can do dependency
-                    % injection by providing our own user-defined function
-                    % in the Experiment constructor.
-                    [prospectA, prospectB] = obj.model.design2prospects(chosen_design);
-                    
-                    response_data = getHumanResponse(prospectA, prospectB,...
-                        obj.human_response_options{:});
-            end
-            
-            responseDidChooseB = response_data.didChooseB;
-            reaction_time = response_data.reaction_time;
-        end
-        
-        
-        function obj = enterAgentResponse(obj, chosen_design, choseLater, reaction_time)
-            % Call this function once we have a response from an agent
-            
-            % append to data
-            obj.previous_designs = [obj.previous_designs; chosen_design];
-            obj.all_responses = [obj.all_responses; choseLater];
-            obj.all_reaction_times = [obj.all_reaction_times; reaction_time];
-            % must be called AFTER we've appended to previous_designs and all_responses
-            obj = obj.updateBeliefs();
-            
-            obj.export_current_point_estimates();
-            % Store summary data
-            obj = obj.updateThetaRecord();
-            
-            obj = obj.update_experiment_results();
-            % For extra caution, save response data after every response
-            obj.export_experiment_results();
-        end
+		function [response_object] = collect_response(obj, chosen_design)
+			
+			switch obj.p.Results.agent
+				case{'simulated_agent'}
+					response_object = obj.model.getSimulatedResponse(chosen_design, obj.true_theta);
+					
+				case{'real_agent'}
+					% TODO: now this is here, we can do dependency
+					% injection by providing our own user-defined function
+					% in the Experiment constructor.
+					[prospectA, prospectB] = obj.model.design2prospects(chosen_design);
+					
+					response_object = getHumanResponse(prospectA, prospectB,...
+						obj.human_response_options{:});
+			end
+			
+		end
         
         
         function obj = updateBeliefs(obj)
