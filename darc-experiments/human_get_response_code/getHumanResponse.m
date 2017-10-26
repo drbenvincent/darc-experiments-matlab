@@ -19,7 +19,7 @@ bText = constructQuestionString(prospectB, opts.Results);
 % Get the response via GUI
 [didChooseB, reaction_time] = presentQuestionGUI(question_posed, aText, bText);
 
-%% Package up output into a structure
+%% Package up output into a structure/object
 response.didChooseB = didChooseB;
 response.reaction_time = reaction_time;
 end
