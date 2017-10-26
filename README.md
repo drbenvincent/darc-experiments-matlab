@@ -273,14 +273,14 @@ hyperbolicExpt = Experiment(hyperbolicModel, 'plotting', 'full'); % a GUI dialog
 for trial = 1:30
     if mod(trial,2) % run trial with exponential model on even trials
         exponentialExpt = exponentialExpt.runOneTrial();
-		% update posteriors of other model(s) with this trial data
-		[last_design, last_response] = exponentialExpt.get_last_trial_info();
-		hyperbolicExpt = hyperbolicExpt.enterAgentResponse(last_design, last_response);
-	else % run trial with hyperbolic model on odd trials
-		hyperbolicExpt = hyperbolicExpt.runOneTrial();
         % update posteriors of other model(s) with this trial data
-		[last_design, last_response] = hyperbolicExpt.get_last_trial_info();
-		exponentialExpt = exponentialExpt.enterAgentResponse(last_design, last_response);
+        [last_design, last_response] = exponentialExpt.get_last_trial_info();
+        hyperbolicExpt = hyperbolicExpt.enterAgentResponse(last_design, last_response);
+	else % run trial with hyperbolic model on odd trials
+        hyperbolicExpt = hyperbolicExpt.runOneTrial();
+        % update posteriors of other model(s) with this trial data
+        [last_design, last_response] = hyperbolicExpt.get_last_trial_info();
+        exponentialExpt = exponentialExpt.enterAgentResponse(last_design, last_response);
     end
 end
 ```
