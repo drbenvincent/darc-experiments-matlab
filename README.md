@@ -84,6 +84,7 @@ expt = expt.runTrials();
 
 But we can also run time discounting experiments, but assuming participants discount according to different discount functions. We can do this by creating different models, so in the above code we can replace `Model_hyperbolic1_time` with one of the other available models. The total list of current discount functions supported (currently) is:
 - Hyperbolic discounting, `Model_hyperbolic1_time`
+- Exponential discounting, `Model_exponential_time`
 - **<< details to follow >>**
 
 ### Running the Kirby (2009) procedure
