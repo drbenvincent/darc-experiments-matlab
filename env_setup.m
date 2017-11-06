@@ -10,7 +10,9 @@ addpath(fullfile(pathOfThisFunction,'darc-toolbox/'))
 addSubFoldersToPath()
 
 %% Add experiment-specific functions
-addpath(genpath('darc-experiments/'))
+temp = genpath(fullfile(pathOfThisFunction,'darc-experiments'));
+addpath(temp)
+%addpath(fullfile(pathOfThisFunction,'darc-experiments'))
 
 % these are included as local copies in the \dependencies folder
 % %% Ensure dependencies are present and added to Matlab path
