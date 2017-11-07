@@ -47,6 +47,11 @@ classdef Experiment
         %all_reaction_times
         human_response_options % key/value pairs... cell array of strings
         data_table
+		
+		% string of optional text to include in the filename of saved
+		% files. This will be used in addition to default information such
+		% as the participant ID, date, time, and model name.
+		save_text 
     end
     
     % protected
@@ -69,6 +74,7 @@ classdef Experiment
             p.addParameter('agent', 'real_agent', @(x) any(strcmp(x,{'simulated_agent','real_agent'})));
             p.addParameter('plotting', 'end', @(x) any(strcmp(x,{'none','end','full','demo'})));
             p.addParameter('save_path', fullfile(cd,'data'), @isstr);
+			p.addParameter('save_text', '', @isstr);
             p.addParameter('expt_options', struct(), @isstruct)
             p.addParameter('trials', 30, @isnumeric)
             p.addParameter('human_response_options', {}, @iscellstr)
@@ -279,6 +285,10 @@ classdef Experiment
             obj.export_experiment_results();
 		end
 		
+		function obj = set_save_text(obj, save_text)
+			obj.save_text = save_text;
+		end
+		
     end
     
     
@@ -444,7 +454,10 @@ classdef Experiment
             % incude model class name in the filename. Helps to keep things clear when
             % we are running multiple types of experiments on a single participant
             Model_class_name = class(obj.model);
-            filename = [Model_class_name '-' obj.expt_options.participantID '.txt'];
+            filename = [obj.expt_options.participantID...
+				'-' obj.save_text...
+				'-' Model_class_name...
+				'-rawdata' '.txt'];
             full_save_path_and_filename = fullfile(obj.p.Results.save_path, filename);
             exportData(full_save_path_and_filename, obj.data_table)
         end
@@ -457,8 +470,10 @@ classdef Experiment
             
             % Build filename
             Model_class_name = class(obj.model);
-            filename = [Model_class_name...
-                '-' obj.expt_options.participantID '-params' '.txt'];
+            filename = [obj.expt_options.participantID...
+				'-' obj.save_text...
+				'-' Model_class_name...
+				'-params' '.txt'];
             full_save_path_and_filename = fullfile(obj.p.Results.save_path, 'theta', filename);
             exportData(full_save_path_and_filename, pointEstimateTable)
         end

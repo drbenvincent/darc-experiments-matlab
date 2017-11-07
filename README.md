@@ -227,6 +227,30 @@ When `delay_framing` is set to `date`, then future rewards will be presented as 
 ### Need even more options?
 The easiest way to add more framing options is to either go and edit the `getHumanResponse.m` file, or to create a feature request.
 
+## How to customise name of saved files?
+If you are running multiple experiments, then you will need to be able to look at the saved outputs and clearly be able to link these to the particular experiment. These different experiments may involve different models, experimental conditions, question framing types, etc. 
+
+You can specify some text which will be included in the filenames. These will also include some core information such as: participant ID, date and time at the start of the experiment, and the model type used. The example below shows how to provide this (optional) text to the filenames of saved files.
+
+```matlab
+myModel = Model_hyperbolic1_time('epsilon', 0.01);
+expt = Experiment(myModel);
+% customise save text in the line below
+expt = expt.set_save_text('timediscounting-delayframe-gain');
+```
+
+This will result in filenames which have this basic form:
+
+    DOE_J-2017Nov07-10.07-timediscounting-delayframe-gain-Model_hyperbolic1_time-rawdata.txt
+    
+where the last token shows this is for the raw trial data. Or 
+
+    DOE_J-2017Nov07-10.07-timediscounting-delayframe-gain-Model_hyperbolic1_time-params.txt
+    
+for the exported point estimates of parameters.
+
+It will aid you in the long run if you give a bit of thought into the form of the `save_text` you provide. Having unless you are going to process these files manually, it will be much easier to write a function to parse these filenames in your analysis code if you keep the ordering and naming of items in `save_text` coherent.
+
 ## How to use advanced or atypical choice elicitation methods
 The current implementation elicits questions in the form of text in buttons that a human user can click on. If you want to drive more complex response elicitation methods, like interesting GUI displays, or some crazy custom set up for electrophysiology, then we are happy to work with you. We'd probably implement this by using callback functions, but please do get in touch.
 
