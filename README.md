@@ -132,6 +132,8 @@ expt = expt.runTrials();
 
 ## 3. Probability discounting
 
+Note that if you are running probability discounting experiments and present probabilities in terms of odds (see below) then you might want to customise the design space so that whole-numbered odds are presented to participants. Full details in the "How-to" sections below.
+
 ### Hyperbolic discounting of odds against a risky prospect
 Experiments assuming hyperbolic discounting of log odds against the risky prospect can be run with:
 
@@ -198,6 +200,24 @@ myModel = Model_hyperbolic1_time('epsilon', 0.01,...
     'D_B', D_B);
 ```
 
+### Customising risky choice experiments, with odds framing
+When you run a risky choice experiment and want to present in odds (rather than probabilities), you might want to do something like the following in order to test whole-numbered odds.
+
+```matlab
+% create P_B values
+oddsvec = [20 15 10 5 4 3 2];
+P_B_oddsframe = oddsagainst2prob([oddsvec 1 fliplr(1./oddsvec)]);
+
+% feed them in to the model
+myModel = Model_hyperbolic1_prob('epsilon', 0.01,...
+    'P_B', P_B_oddsframe);
+myExpt = Experiment(myModel);
+myExpt = myExpt.set_human_response_options(...
+	{'commodity_type', 'GBP',...
+	'prob_framing', 'odds'});
+```
+
+
 ## How to customise question framing
 Currently, when an experiment is run with a non-simulated agent, we call the function `getHumanResponse.m`. This has various defaults which leads to a sensible way to present prospects to participants in the form of text which is presented in buttons.
 
@@ -228,7 +248,7 @@ When `delay_framing` is set to `date`, then future rewards will be presented as 
 The easiest way to add more framing options is to either go and edit the `getHumanResponse.m` file, or to create a feature request.
 
 ## How to customise name of saved files?
-If you are running multiple experiments, then you will need to be able to look at the saved outputs and clearly be able to link these to the particular experiment. These different experiments may involve different models, experimental conditions, question framing types, etc. 
+If you are running multiple experiments, then you will need to be able to look at the saved outputs and clearly be able to link these to the particular experiment. These different experiments may involve different models, experimental conditions, question framing types, etc.
 
 You can specify some text which will be included in the filenames. These will also include some core information such as: participant ID, date and time at the start of the experiment, and the model type used. The example below shows how to provide this (optional) text to the filenames of saved files.
 
@@ -242,11 +262,11 @@ expt = expt.set_save_text('timediscounting-delayframe-gain');
 This will result in filenames which have this basic form:
 
     DOE_J-2017Nov07-10.07-timediscounting-delayframe-gain-Model_hyperbolic1_time-rawdata.txt
-    
-where the last token shows this is for the raw trial data. Or 
+
+where the last token shows this is for the raw trial data. Or
 
     DOE_J-2017Nov07-10.07-timediscounting-delayframe-gain-Model_hyperbolic1_time-params.txt
-    
+
 for the exported point estimates of parameters.
 
 It will aid you in the long run if you give a bit of thought into the form of the `save_text` you provide. Having unless you are going to process these files manually, it will be much easier to write a function to parse these filenames in your analysis code if you keep the ordering and naming of items in `save_text` coherent.
@@ -315,7 +335,7 @@ Note 2: This is not the most elegant implementation. We may provide a smoother w
 
 
 ## How to override the GUI asking for experiment options
-By default each time an `Experiment` object is constructed, we get a GUI which asks for the participant ID and number of trials for that experiments. This is fine when running one experiment, but if we are running multiple experiments on a single participant, we may not want to input this information in repeatedly. 
+By default each time an `Experiment` object is constructed, we get a GUI which asks for the participant ID and number of trials for that experiments. This is fine when running one experiment, but if we are running multiple experiments on a single participant, we may not want to input this information in repeatedly.
 
 Instead, we could for example just get the experiment options once at the start, using
 
@@ -325,13 +345,13 @@ expt_options = getHumanExperimentOptions();
 
 which produces a structure
 
-    expt_options = 
+    expt_options =
       struct with fields:
-    
+
                trials: 10.00
         participantID: 'DOE_JON-2017Nov08-13.17'
-        
-We can then just provide these experiment options manually when we create however many experiments we like. For example, 
+
+We can then just provide these experiment options manually when we create however many experiments we like. For example,
 
 ```matlab
 hyperbolic_time_discounting_model = Model_hyperbolic1_time('epsilon', 0.01);
