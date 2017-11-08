@@ -314,6 +314,36 @@ Note 1: This is _not_ optimally selecting designs to differentiate between model
 Note 2: This is not the most elegant implementation. We may provide a smoother way to do this if it is something that people are keen on doing frequently.
 
 
+## How to override the GUI asking for experiment options
+By default each time an `Experiment` object is constructed, we get a GUI which asks for the participant ID and number of trials for that experiments. This is fine when running one experiment, but if we are running multiple experiments on a single participant, we may not want to input this information in repeatedly. 
+
+Instead, we could for example just get the experiment options once at the start, using
+
+```matlab
+expt_options = getHumanExperimentOptions();
+```
+
+which produces a structure
+
+    expt_options = 
+      struct with fields:
+    
+               trials: 10.00
+        participantID: 'DOE_JON-2017Nov08-13.17'
+        
+We can then just provide these experiment options manually when we create however many experiments we like. For example, 
+
+```matlab
+hyperbolic_time_discounting_model = Model_hyperbolic1_time('epsilon', 0.01);
+% first experiment with default delay framing
+expt(1) = Experiment(hyperbolic_time_discounting_model,...
+	'expt_options', expt_options);
+% second experiment with date framing
+expt(2) = Experiment(hyperbolic_time_discounting_model,...
+	'expt_options', expt_options);
+expt(2) = expt(2).set_human_response_options({'delay_framing', 'date'});
+```
+
 
 ## How to inject manually-specified trials
 It is possible to interleave both automatic and manually-specified trials. Below is an example of how to do this with the `runOneManualTrial` method.
