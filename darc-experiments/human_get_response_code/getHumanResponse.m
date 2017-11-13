@@ -97,7 +97,12 @@ switch opts.prob_framing
             probStr = [num2str(odds) ':1 chance of '];
         else
             odds = prob2odds(1-prospect.prob);
-            probStr = [num2str(odds) ':1 chance against '];
+			
+			% N:1 chance against
+            %probStr = [num2str(odds) ':1 chance against '];
+			
+			% 1:N chance of
+			probStr = ['1:' num2str(odds) ' chance of '];
         end
     otherwise
         error('requested prob_framing not defined')
