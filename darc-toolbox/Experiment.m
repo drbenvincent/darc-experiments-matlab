@@ -435,19 +435,25 @@ classdef Experiment
             % times) into a Table
             
             assert(~isempty(obj.previous_designs), 'No previous designs')
-            
-            temp_data_table = array2table(obj.previous_designs,...
+            obj.data_table = obj.build_data_table();
+		end
+		
+		function data_table = build_data_table(obj)
+			% build a Table of data, each row is a trial
+			
+			% construct initial table with design variables
+			data_table = array2table(obj.previous_designs,...
                 'VariableNames', obj.model.design_variables);
             % convert R_A_over_R_B to R_A
-            temp_data_table.R_A = temp_data_table.R_A_over_R_B .* temp_data_table.R_B;
-            temp_data_table.R_A_over_R_B = [];
+            data_table.R_A = data_table.R_A_over_R_B .* data_table.R_B;
+            data_table.R_A_over_R_B = [];
+			
             % append responses column
-            temp_data_table.R = obj.all_responses;
+            data_table.R = obj.all_responses;
+			
             % append reaction times
-            temp_data_table.reaction_time = obj.all_reaction_times;
-  
-            obj.data_table = temp_data_table;
-        end
+            data_table.reaction_time = obj.all_reaction_times;
+		end
         
         
         function export_experiment_results(obj)
@@ -463,11 +469,7 @@ classdef Experiment
         end
         
         function export_current_point_estimates(obj)            
-            % create table of median param estimates of free params
-            free_param_names = obj.model.params(~obj.model.is_theta_fixed);
-            pointEstimateTable = array2table(median(obj.theta),...
-                'VariableNames',free_param_names);
-            
+
             % Build filename
             Model_class_name = class(obj.model);
             filename = [obj.expt_options.participantID...
@@ -475,8 +477,75 @@ classdef Experiment
 				'-' Model_class_name...
 				'-params' '.txt'];
             full_save_path_and_filename = fullfile(obj.p.Results.save_path, 'theta', filename);
-            exportData(full_save_path_and_filename, pointEstimateTable)
-        end
+			
+			% do the export
+            exportData(full_save_path_and_filename, obj.build_point_estimate_table)
+		end
+		
+		function point_estimate_table = build_point_estimate_table(obj)
+			% create table of median param estimates of free params
+			free_param_names = obj.model.params(~obj.model.is_theta_fixed);
+			point_estimate_table = array2table(median(obj.theta),...
+				'VariableNames', free_param_names);
+			
+			% TODO 1: code below works fine, but could put into functions, 
+			% and extract out the plotting for debugging
+			
+			% TODO 2: this is NOT the AUC for the median parameters. It is
+			% the median discount fraction curve, integrated over
+			% parameters. This is not wrong, just need to explicitly know
+			% this.
+			
+			% TODO 3: This breaks the code for time + magnitude effect
+			% model. *** Move this code into Model subclasses to deal
+			% effectively with 1D discount functions vs 2D discount
+			% surfaces ***
+			
+			% append a column for AUC for delay ---------------------------
+			max_delay = 365;
+			prospect.delay = linspace(0, max_delay, 1000);
+			thetaStruct = obj.model.theta_to_struct(obj.theta);
+			% This will produce an AUC curve for each sample
+			warning('Takes a while, so maybe don''t do this every trial')
+			y = obj.model.delayDiscountingFunction(prospect, thetaStruct);
+			y_median = median(y,1);
+			% Calculate AUC, normalised to max_delay
+			point_estimate_table.AUC_delay_365 = trapz(prospect.delay, y_median)./ max_delay;
+			
+			if strcmp(obj.p.Results.plotting, 'full')
+				% optional plotting for debug purposes
+				figure(666), subplot(1,2,1)
+				plot(prospect.delay, y_median)
+				xlabel('objective delay, D^b')
+				ylabel('discount factor')
+				xlim([0 max_delay])
+				axis square
+			end
+			% -------------------------------------------------------------
+			
+			% append a column for AUC for prob ---------------------------
+			prospect.prob = linspace(0, 1, 1000);
+			thetaStruct = obj.model.theta_to_struct(obj.theta);
+			% This will produce an AUC curve for each sample
+			warning('Takes a while, so maybe don''t do this every trial')
+			y = obj.model.probWeightingFunction(prospect, thetaStruct);
+			y_median = median(y,1);
+			% Calculate AUC, normalised to max_delay
+			point_estimate_table.AUC_prob_01 = trapz(prospect.prob, y_median)./ 1;
+			
+			if strcmp(obj.p.Results.plotting, 'full')
+				% optional plotting for debug purposes
+				figure(666), subplot(1,2,2)
+				plot(prospect.prob, y_median)
+				xlabel('objective probability, P^b')
+				ylabel('discount factor')
+				xlim([0 1])
+				axis square
+			end
+			% -------------------------------------------------------------
+			drawnow
+		end
+
         
         % PLOTTING FUNCTIONS ==============================================
         
