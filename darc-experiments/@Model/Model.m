@@ -69,7 +69,67 @@ classdef (Abstract) Model
             % - probabilityObject must be a matlab probability object made
             % by the `makedist` function.
             obj.priors.(paramName) = probabilityObject;
-        end
+		end
+		
+		function AUC_delay = calculateAUCdelay(obj, max_delay, theta)
+			% return AUC for time discounting, but return [] if we cannot
+			% (ie for 2D discount surfaces)
+			try
+				
+				% NOTE: this is NOT the AUC for the median parameters. It is
+				% the median discount fraction curve, integrated over
+				% parameters. This is not wrong, just need to explicitly know
+				% this.
+				
+				prospect.delay = linspace(0, max_delay, 1000);
+				thetaStruct = obj.theta_to_struct(theta);
+				y = obj.delayDiscountingFunction(prospect, thetaStruct);
+				y_median = median(y,1);
+				AUC_delay = trapz(prospect.delay, y_median)./ max_delay;
+				
+				% % optional plotting for debugging purposes
+				% figure(666), subplot(1,2,1)
+				% plot(prospect.delay, y_median)
+				% xlabel('objective delay, D^b')
+				% ylabel('discount factor')
+				% xlim([0 max_delay])
+				% axis square
+				% drawnow
+				
+			catch
+				AUC_delay = [];
+			end
+		end
+		
+		function AUC_prob = calculateAUCprob(obj, theta)
+			% return AUC for time discounting, but return [] if we cannot
+			% (ie for 2D discount surfaces)
+			try
+				
+				% NOTE: this is NOT the AUC for the median parameters. It is
+				% the median discount fraction curve, integrated over
+				% parameters. This is not wrong, just need to explicitly know
+				% this.
+				
+				prospect.prob = linspace(0, 1, 1000);
+				thetaStruct = obj.theta_to_struct(theta);
+				y = obj.probWeightingFunction(prospect, thetaStruct);
+				y_median = median(y,1);
+				AUC_prob = trapz(prospect.prob, y_median)./ 1;
+				
+				% % optional plotting for debug purposes
+				% figure(666), subplot(1,2,2)
+				% plot(prospect.prob, y_median)
+				% xlabel('objective probability, P^b')
+				% ylabel('discount factor')
+				% xlim([0 1])
+				% axis square
+				% drawnow
+				
+			catch
+				AUC_prob = [];
+			end
+		end
 
         % Declarations generic
         b_fixed = is_theta_fixed(obj);

@@ -485,65 +485,32 @@ classdef Experiment
 		function point_estimate_table = build_point_estimate_table(obj)
 			% create table of median param estimates of free params
 			free_param_names = obj.model.params(~obj.model.is_theta_fixed);
+			
 			point_estimate_table = array2table(median(obj.theta),...
 				'VariableNames', free_param_names);
 			
-			% TODO 1: code below works fine, but could put into functions, 
-			% and extract out the plotting for debugging
+			point_estimate_table = appendAUCdelay(point_estimate_table, 365);
 			
-			% TODO 2: this is NOT the AUC for the median parameters. It is
-			% the median discount fraction curve, integrated over
-			% parameters. This is not wrong, just need to explicitly know
-			% this.
+			point_estimate_table = appendAUCprob(point_estimate_table);
 			
-			% TODO 3: This breaks the code for time + magnitude effect
-			% model. *** Move this code into Model subclasses to deal
-			% effectively with 1D discount functions vs 2D discount
-			% surfaces ***
-			
-			% append a column for AUC for delay ---------------------------
-			max_delay = 365;
-			prospect.delay = linspace(0, max_delay, 1000);
-			thetaStruct = obj.model.theta_to_struct(obj.theta);
-			% This will produce an AUC curve for each sample
-			warning('Takes a while, so maybe don''t do this every trial')
-			y = obj.model.delayDiscountingFunction(prospect, thetaStruct);
-			y_median = median(y,1);
-			% Calculate AUC, normalised to max_delay
-			point_estimate_table.AUC_delay_365 = trapz(prospect.delay, y_median)./ max_delay;
-			
-			if strcmp(obj.p.Results.plotting, 'full')
-				% optional plotting for debug purposes
-				figure(666), subplot(1,2,1)
-				plot(prospect.delay, y_median)
-				xlabel('objective delay, D^b')
-				ylabel('discount factor')
-				xlim([0 max_delay])
-				axis square
+			function point_estimate_table = appendAUCdelay(point_estimate_table, max_delay)
+				warning('Takes a short moment, so maybe don''t do this every trial')
+				AUC_delay = obj.model.calculateAUCdelay(max_delay, obj.theta);
+				% append column to table
+				if ~isempty(AUC_delay)
+					var_name = ['AUC_delay' num2str(max_delay)];
+					point_estimate_table.(var_name) = AUC_delay;
+				end
 			end
-			% -------------------------------------------------------------
 			
-			% append a column for AUC for prob ---------------------------
-			prospect.prob = linspace(0, 1, 1000);
-			thetaStruct = obj.model.theta_to_struct(obj.theta);
-			% This will produce an AUC curve for each sample
-			warning('Takes a while, so maybe don''t do this every trial')
-			y = obj.model.probWeightingFunction(prospect, thetaStruct);
-			y_median = median(y,1);
-			% Calculate AUC, normalised to max_delay
-			point_estimate_table.AUC_prob_01 = trapz(prospect.prob, y_median)./ 1;
-			
-			if strcmp(obj.p.Results.plotting, 'full')
-				% optional plotting for debug purposes
-				figure(666), subplot(1,2,2)
-				plot(prospect.prob, y_median)
-				xlabel('objective probability, P^b')
-				ylabel('discount factor')
-				xlim([0 1])
-				axis square
+			function point_estimate_table = appendAUCprob(point_estimate_table)
+				warning('Takes a short moment, so maybe don''t do this every trial')
+				AUC_prob = obj.model.calculateAUCprob(obj.theta);
+				% append column to table
+				if ~isempty(AUC_prob)
+					point_estimate_table.AUC_prob01 = AUC_prob;
+				end
 			end
-			% -------------------------------------------------------------
-			drawnow
 		end
 
         
