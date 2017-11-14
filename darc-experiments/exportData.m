@@ -5,16 +5,11 @@ assert(ischar(full_save_path_and_filename),'full_save_path_and_filename should b
 
 assert(istable(data_table),'data_table should be of type Table')
 
-% save
-% data_foldername = fullfile(savePath(),'data');
-% %ensureFolderExists( fullfile(cd, data_foldername) )
-% ensureFolderExists( data_foldername )
-% saveas = fullfile(data_foldername,[participantID '.txt']);
-
 data_foldername = fileparts(full_save_path_and_filename);
 ensureFolderExists( data_foldername )
 
-writetable(data_table, full_save_path_and_filename, 'Delimiter', 'tab')
+% File format specific code here: comma separated .csv
+full_save_path_and_filename = [full_save_path_and_filename '.csv'];
+writetable(data_table, full_save_path_and_filename, 'Delimiter', ',')
 
-%fprintf('\nSAVED AS: %s\n',full_save_path_and_filename)
 end
