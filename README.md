@@ -425,10 +425,10 @@ You should be able to do this straightforwardly by running the `make_plots_for_p
 Thus far the following outputs are generated:
 
 ## Raw response data
-A tab-delimited `.txt` file is saved with the raw response data. Each row is a trial. This is saved after every trial in order to ensure data is saved in the advent of an error, power failure, or other melt-down.
+A comma separated `.csv` file is saved with the raw response data. Each row is a trial. This is saved after every trial in order to ensure data is saved in the advent of an error, power failure, or other melt-down.
 
 ## Point estimates of parameters
-A tab-delimited `.txt` file is exported containing the point estimates of the parameters. Each column is a parameter.
+A comma separated `.csv` file is exported containing the point estimates of the parameters. Each column is a parameter.
 
 ## Figures
 By default, a set of figures are produced at the end of the experiment. This can be overridden by passing in the optional key/value pair when constructing the `Experiment` object.
