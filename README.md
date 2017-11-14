@@ -261,11 +261,11 @@ expt = expt.set_save_text('timediscounting-delayframe-gain');
 
 This will result in filenames which have this basic form:
 
-    DOE_J-2017Nov07-10.07-timediscounting-delayframe-gain-Model_hyperbolic1_time-rawdata.txt
+    DOE_J-2017Nov07-10.07-timediscounting-delayframe-gain-Model_hyperbolic1_time-rawdata.csv
 
 where the last token shows this is for the raw trial data. Or
 
-    DOE_J-2017Nov07-10.07-timediscounting-delayframe-gain-Model_hyperbolic1_time-params.txt
+    DOE_J-2017Nov07-10.07-timediscounting-delayframe-gain-Model_hyperbolic1_time-params.csv
 
 for the exported point estimates of parameters.
 
