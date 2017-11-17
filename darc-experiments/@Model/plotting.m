@@ -14,25 +14,6 @@ function plotting(obj, thetaStruct, data_table)
 % Ben Vincent, www.inferenceLab.com, May 2016
 
 
-
-% %% Plot utility function
-% f = figure(1);
-% f.Name = 'Utility function';
-% clf
-% %obj.plot_utility_function(thetaStruct, data_table)
-%
-% %% Plot probability weighting function
-% f = figure(2);
-% f.Name = 'Probability weighting function';
-% clf
-% obj.plot_prob_weighting_function(thetaStruct, data_table)
-%
-% %% Plot delay discounting function
-% f = figure(3);
-% f.Name = 'Delay discounting function';
-% clf
-% obj.plot_delay_function(thetaStruct, data_table)
-
 %% Plot utility function
 f = figure(1);
 f.Name = 'Model predictions and data';
