@@ -297,7 +297,7 @@ classdef Experiment
             
             obj = obj.update_experiment_results();
             % For extra caution, save response data after every response
-            obj.export_experiment_results();
+            obj.export_raw_trial_data();
         end
         
         function obj = set_save_text(obj, save_text)
@@ -443,7 +443,7 @@ classdef Experiment
         
         % EXPORTING FUNCTIONS ==================================================
         
-        function export_experiment_results(obj)
+        function export_raw_trial_data(obj)
             % incude model class name in the filename. Helps to keep things clear when
             % we are running multiple types of experiments on a single participant
             Model_class_name = class(obj.model);
