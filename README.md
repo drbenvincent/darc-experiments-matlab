@@ -476,13 +476,11 @@ As well as being exported to disc, you can programmatically access the raw data 
       4×8 table
         D_A    P_A    R_B    D_B    P_B    R_A    R    reaction_time
         ___    ___    ___    ___    ___    ___    _    _____________
-        0      1      100    90     1      50     0    2.9743       
-        0      1      100    28     1      60     0    2.1513       
-        0      1      100    21     1      55     1    1.7055       
-        0      1      100    28     1      55     0    1.8099  
+        0      1      100    90     1      50     A    2.9743       
+        0      1      100    28     1      60     A    2.1513       
+        0      1      100    21     1      55     B    1.7055       
+        0      1      100    28     1      55     A    1.8099  
 
-Note that `R=0` means prospect A was chosen, and `R=1`
- means prospect B was chosen.
 
 # Analysing data
 This toolbox is designed for data collection. The toolbox does export estimated parameter estimates, and you can use these as data points in your larger experimental data file of multiple participants and conditions etc. However, the default priors over parameters used by the toolbox were chosen to be both general, but also give rise to stable and sensible estimates based upon an individual agent's data.
