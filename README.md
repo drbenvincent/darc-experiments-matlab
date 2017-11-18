@@ -23,11 +23,11 @@ This toolbox allows researchers to run Delayed and Risky Choice experiments usin
 - **Set up experiments with minimal coding.** Set up and run adaptive experiments in just a few lines of code. See the examples and how-to's below.
 - **Easily customise your prior beliefs over parameters.** This is a key feature of running efficient adaptive experiments.
 - **Easy to customise the framing of choices presented to participants.** You can customise the commodity being offered (eg. dollars, British pounds, chocolate bars). You can also customise the framing of delays (presented as delays vs future date) or probabilties (probabilties vs odds).
-- **Easy to customise the set of allowable rewards, delays and probabilities** (i.e. the design space).
+- **Easy to customise the set of allowable rewards, delays and probabilities.** (i.e. the design space).
 - **Interleave multiple adaptive experiments.** If you want to do interesting mixed-block experiments or react to the current estimates of model parameters (e.g. discount rates) then you can do that. You can do this by asking the experiment to run just one trial.
-- **Inject custom trials** Left to it's own devices, an experiment will choose it's own set of designs. But if you have particular experimental needs, you can inject your own (manually specified) designs amongst automatically run trials.
-- **Point estimates of parameters are saved**
-- **Raw response data files are saved** This allows more advanced scoring of response data (e.g. by multiple alternative decision making models). Reaction times are also saved.
+- **Inject custom trials.** Left to it's own devices, an experiment will choose it's own set of designs. But if you have particular experimental needs, you can inject your own (manually specified) designs amongst automatically run trials.
+- **Point estimates of parameters are saved.**
+- **Raw response data files are saved.** This allows more advanced scoring of response data (e.g. by multiple alternative decision making models). Reaction times are also saved.
 
 # Requirements
 To use this toolbox, you will need:
@@ -132,6 +132,8 @@ expt = expt.runTrials();
 
 ## 3. Probability discounting
 
+Note that if you are running probability discounting experiments and present probabilities in terms of odds (see below) then you might want to customise the design space so that whole-numbered odds are presented to participants. Full details in the "How-to" sections below.
+
 ### Hyperbolic discounting of odds against a risky prospect
 Experiments assuming hyperbolic discounting of log odds against the risky prospect can be run with:
 
@@ -188,15 +190,33 @@ You can override the default design space by using key/value arguments into the 
 
 ```matlab
 D_B = [1/24 .* [1 2 3 4 5 6]...   % hours
-	1 2 3 4 5 6 ...               % days
-	7 * [1 2 3] ...               % weeks
-	30 * [1 2 3 4 5 6]...         % months
-	365 * [1 2 5]];               % years
+    1 2 3 4 5 6 ...               % days
+    7 * [1 2 3] ...               % weeks
+    30 * [1 2 3 4 5 6]...         % months
+    365 * [1 2 5]];               % years
 
 myModel = Model_hyperbolic1_time('epsilon', 0.01,...
     'R_B', [90 100 110],...
     'D_B', D_B);
 ```
+
+### Customising risky choice experiments, with odds framing
+When you run a risky choice experiment and want to present in odds (rather than probabilities), you might want to do something like the following in order to test whole-numbered odds.
+
+```matlab
+% create P_B values
+oddsvec = [20 15 10 5 4 3 2];
+P_B_oddsframe = oddsagainst2prob([oddsvec 1 fliplr(1./oddsvec)]);
+
+% feed them in to the model
+myModel = Model_hyperbolic1_prob('epsilon', 0.01,...
+    'P_B', P_B_oddsframe);
+myExpt = Experiment(myModel);
+myExpt = myExpt.set_human_response_options(...
+	{'commodity_type', 'GBP',...
+	'prob_framing', 'odds'});
+```
+
 
 ## How to customise question framing
 Currently, when an experiment is run with a non-simulated agent, we call the function `getHumanResponse.m`. This has various defaults which leads to a sensible way to present prospects to participants in the form of text which is presented in buttons.
@@ -207,7 +227,7 @@ The details of this question presentation can be altered by calling the `set_hum
 myModel = Model_hyperbolic1_time('epsilon', 0.01);
 expt = Experiment(myModel);
 expt = expt.set_human_response_options({'commodity_type', 'GBP',...
-	'delay_framing', 'date'});
+    'delay_framing', 'date'});
 expt = expt.runTrials();
 ```
 
@@ -226,6 +246,30 @@ When `delay_framing` is set to `date`, then future rewards will be presented as 
 
 ### Need even more options?
 The easiest way to add more framing options is to either go and edit the `getHumanResponse.m` file, or to create a feature request.
+
+## How to customise name of saved files?
+If you are running multiple experiments, then you will need to be able to look at the saved outputs and clearly be able to link these to the particular experiment. These different experiments may involve different models, experimental conditions, question framing types, etc.
+
+You can specify some text which will be included in the filenames. These will also include some core information such as: participant ID, date and time at the start of the experiment, and the model type used. The example below shows how to provide this (optional) text to the filenames of saved files.
+
+```matlab
+myModel = Model_hyperbolic1_time('epsilon', 0.01);
+expt = Experiment(myModel);
+% customise save text in the line below
+expt = expt.set_save_text('timediscounting-delayframe-gain');
+```
+
+This will result in filenames which have this basic form:
+
+    DOE_J-2017Nov07-10.07-timediscounting-delayframe-gain-Model_hyperbolic1_time-rawdata.csv
+
+where the last token shows this is for the raw trial data. Or
+
+    DOE_J-2017Nov07-10.07-timediscounting-delayframe-gain-Model_hyperbolic1_time-params.csv
+
+for the exported point estimates of parameters.
+
+It will aid you in the long run if you give a bit of thought into the form of the `save_text` you provide. Having unless you are going to process these files manually, it will be much easier to write a function to parse these filenames in your analysis code if you keep the ordering and naming of items in `save_text` coherent.
 
 ## How to use advanced or atypical choice elicitation methods
 The current implementation elicits questions in the form of text in buttons that a human user can click on. If you want to drive more complex response elicitation methods, like interesting GUI displays, or some crazy custom set up for electrophysiology, then we are happy to work with you. We'd probably implement this by using callback functions, but please do get in touch.
@@ -256,8 +300,8 @@ for trial = 1:30
 end
 ```
 
-## How simultaneously fit multiple models
-The example above illustrates if we want to run a time discounting experiment, interleaved with a probability discounting. But what if we want to just focus on time discounting, and do simultaneous parameter estimation for the hyperbolic time discounting model and the exponential time discounting model?
+## How to simultaneously fit multiple models
+The example above illustrates if we want to run a time discounting experiment, interleaved with a probability discounting experiment. But what if we want to just focus on time discounting, and do simultaneous parameter estimation for the hyperbolic time discounting model and the exponential time discounting model?
 
 This is entirely doable and demonstrated in the example below. This example selects designs alternately from the exponential model and the hyperbolic models. But after each trial, we provide the design and response data to the other model, such that the posterior parameter estimates for both models is based upon _all_ the data collected.
 
@@ -276,7 +320,7 @@ for trial = 1:30
         % update posteriors of other model(s) with this trial data
         [last_design, last_response] = exponentialExpt.get_last_trial_info();
         hyperbolicExpt = hyperbolicExpt.enterAgentResponse(last_design, last_response);
-	else % run trial with hyperbolic model on odd trials
+    else % run trial with hyperbolic model on odd trials
         hyperbolicExpt = hyperbolicExpt.runOneTrial();
         % update posteriors of other model(s) with this trial data
         [last_design, last_response] = hyperbolicExpt.get_last_trial_info();
@@ -290,6 +334,36 @@ Note 1: This is _not_ optimally selecting designs to differentiate between model
 Note 2: This is not the most elegant implementation. We may provide a smoother way to do this if it is something that people are keen on doing frequently.
 
 
+## How to override the GUI asking for experiment options
+By default each time an `Experiment` object is constructed, we get a GUI which asks for the participant ID and number of trials for that experiments. This is fine when running one experiment, but if we are running multiple experiments on a single participant, we may not want to input this information in repeatedly.
+
+Instead, we could for example just get the experiment options once at the start, using
+
+```matlab
+expt_options = getHumanExperimentOptions();
+```
+
+which produces a structure
+
+    expt_options =
+      struct with fields:
+
+               trials: 10.00
+        participantID: 'DOE_JON-2017Nov08-13.17'
+
+We can then just provide these experiment options manually when we create however many experiments we like. For example,
+
+```matlab
+hyperbolic_time_discounting_model = Model_hyperbolic1_time('epsilon', 0.01);
+% first experiment with default delay framing
+expt(1) = Experiment(hyperbolic_time_discounting_model,...
+	'expt_options', expt_options);
+% second experiment with date framing
+expt(2) = Experiment(hyperbolic_time_discounting_model,...
+	'expt_options', expt_options);
+expt(2) = expt(2).set_human_response_options({'delay_framing', 'date'});
+```
+
 
 ## How to inject manually-specified trials
 It is possible to interleave both automatic and manually-specified trials. Below is an example of how to do this with the `runOneManualTrial` method.
@@ -302,14 +376,14 @@ myExpt = Experiment(myModel);
 
 % Every 5th trial, run a manually-specified trial
 for trial = 1:40
-	if rem(trial,5)==0
-		% Automatic trial
-		myExpt = myExpt.runOneTrial();
-	else
-		% ---- construct your manual experimental design here ----
-		% >> manual_design = <your code here>
-		myExpt = myExpt.runOneManualTrial(manual_design);
-	end
+    if rem(trial,5)==0
+        % Automatic trial
+        myExpt = myExpt.runOneTrial();
+    else
+        % ---- construct your manual experimental design here ----
+        % >> manual_design = <your code here>
+        myExpt = myExpt.runOneManualTrial(manual_design);
+    end
 end
 ```
 
@@ -323,8 +397,8 @@ You can also run simulated participants through the adaptive experiments. This i
 myModel = Model_hyperbolic1_time('epsilon', 0.01);
 % build an experiment object. But provide extra arguments
 expt = Experiment(myModel,...
-	'agent', 'simulated_agent',...
-	'true_theta', struct('logk', -3, 'alpha', 2));
+    'agent', 'simulated_agent',...
+    'true_theta', struct('logk', -3, 'alpha', 2));
 expt = expt.runTrials();
 ```
 
@@ -338,9 +412,9 @@ You can also override the default number of simulated trials with the following 
 
 ```matlab
 expt = Experiment(myModel,...
-	'agent', 'simulated_agent',...
-	'true_theta', struct('logk', -3, 'alpha', 2),...
-	'trials', 10);
+    'agent', 'simulated_agent',...
+    'true_theta', struct('logk', -3, 'alpha', 2),...
+    'trials', 10);
 ```
 
 ## How to reproduce the figures in our paper
@@ -351,10 +425,10 @@ You should be able to do this straightforwardly by running the `make_plots_for_p
 Thus far the following outputs are generated:
 
 ## Raw response data
-A tab-delimited `.txt` file is saved with the raw response data. Each row is a trial. This is saved after every trial in order to ensure data is saved in the advent of an error, power failure, or other melt-down.
+A comma separated `.csv` file is saved with the raw response data. Each row is a trial. This is saved after every trial in order to ensure data is saved in the advent of an error, power failure, or other melt-down.
 
 ## Point estimates of parameters
-A tab-delimited `.txt` file is exported containing the point estimates of the parameters. Each column is a parameter.
+A comma separated `.csv` file is exported containing the point estimates of the parameters. Each column is a parameter.
 
 ## Figures
 By default, a set of figures are produced at the end of the experiment. This can be overridden by passing in the optional key/value pair when constructing the `Experiment` object.
@@ -380,33 +454,32 @@ You can then do various things with this fitted `Experiment` class.
   This will return the full set of particles which represent the joint distribution.
 
 
-	>> posterior_particles = expt.get_theta_as_struct()
-	posterior_particles =
-	  struct with fields:
-
-	       logk: [50000×1 double]
-	      alpha: [50000×1 double]
-	    epsilon: [50000×1 double]
+    >> posterior_particles = expt.get_theta_as_struct()
+    posterior_particles =
+    struct with fields:
+        logk: [50000×1 double]
+        alpha: [50000×1 double]
+        epsilon: [50000×1 double]
 
 
 You can then do whatever analysis you want on these, such as compute summary statistics:
 
-	>> median(posterior_particles.logk)
-	ans =
-	   -4.4904
+    >> median(posterior_particles.logk)
+    ans =
+       -4.4904
 
 ## Access the raw data table
 As well as being exported to disc, you can programmatically access the raw data table like this:
 
-	>> expt.data_table
-	ans =
-	  4×8 table
-	    D_A    P_A    R_B    D_B    P_B    R_A    R    reaction_time
-	    ___    ___    ___    ___    ___    ___    _    _____________
-	    0      1      100    90     1      50     0    2.9743       
-	    0      1      100    28     1      60     0    2.1513       
-	    0      1      100    21     1      55     1    1.7055       
-	    0      1      100    28     1      55     0    1.8099  
+    >> expt.data_table
+    ans =
+      4×8 table
+        D_A    P_A    R_B    D_B    P_B    R_A    R    reaction_time
+        ___    ___    ___    ___    ___    ___    _    _____________
+        0      1      100    90     1      50     0    2.9743       
+        0      1      100    28     1      60     0    2.1513       
+        0      1      100    21     1      55     1    1.7055       
+        0      1      100    28     1      55     0    1.8099  
 
 Note that `R=0` means prospect A was chosen, and `R=1`
  means prospect B was chosen.

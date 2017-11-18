@@ -86,7 +86,7 @@ switch opts.prob_framing
         if prospect.prob==1
             probStr = '';
         else
-            probStr = [sprintf('%g', prospect.prob*100) '% chance of winning '];
+            probStr = [sprintf('%g', prospect.prob*100) '% chance of '];
         end
         
     case{'odds'}
@@ -94,10 +94,15 @@ switch opts.prob_framing
             probStr = '';
         elseif prospect.prob >= 0.5
             odds = prob2odds(prospect.prob);
-            probStr = [num2str(odds) ':1 of winning '];
+            probStr = [num2str(odds) ':1 chance of '];
         else
             odds = prob2odds(1-prospect.prob);
-            probStr = [num2str(odds) ':1 against winning '];
+			
+			% N:1 chance against
+            %probStr = [num2str(odds) ':1 chance against '];
+			
+			% 1:N chance of
+			probStr = ['1:' num2str(odds) ' chance of '];
         end
     otherwise
         error('requested prob_framing not defined')
