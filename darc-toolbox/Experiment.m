@@ -452,7 +452,26 @@ classdef Experiment
                 '-' Model_class_name...
                 '-rawdata'];
             full_save_path_and_filename = fullfile(obj.userArgs.save_path, filename);
-            exportData(full_save_path_and_filename, obj.data_table)
+			
+            exportData(full_save_path_and_filename,...
+				R_binary_to_categorical_coding(obj.data_table));
+			
+			function data_table = R_binary_to_categorical_coding(data_table)
+				% Use a fail-proof, explicit, coding of the response choice
+				% in order to eliminate human error when
+				% reading/interpreting the raw trial data.
+				
+				% Convert from (0=chose A, 1=chose B), to an explicit
+				% (A, B) coding.
+				
+				choseA = data_table.R==0;
+				choseB = data_table.R==1;
+				
+				new_R_column(choseA, 1) = 'A';
+				new_R_column(choseB, 1) = 'B';
+				
+				data_table.R = new_R_column;
+			end
         end
         
         function export_current_point_estimates(obj)
