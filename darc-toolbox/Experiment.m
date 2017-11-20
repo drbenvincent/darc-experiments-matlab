@@ -118,12 +118,12 @@ classdef Experiment
                         [expt_options] = getHumanExperimentOptions();
                     else
                         % use provided experiment options
-                        expt_options = obj.Results.expt_options;
+                        expt_options = obj.userArgs.expt_options;
                     end
                 else
                     % default options for simulated participants
                     expt_options.participantID = 'simulatedParticipant';
-                    expt_options.trials = obj.Results.trials;
+                    expt_options.trials = obj.userArgs.trials;
                 end
             end
             
