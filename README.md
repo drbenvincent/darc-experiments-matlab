@@ -244,6 +244,13 @@ When `delay_framing` is set to `delay`, then future rewards will be presented in
 
 When `delay_framing` is set to `date`, then future rewards will be presented as occurring on a particular date.
 
+### Whole-numbered rewards
+For some experiments it doesn't make sense to offer fractional reward values. If you want to constrain rewards to take on integer values then you can specify this in the construction of the `Experiment` object with the key-value pair of (`'reward_type', 'integer'`), for example...
+
+```Matlab
+expt = Experiment(myModel, 'reward_type', 'integer');
+```
+
 ### Need even more options?
 The easiest way to add more framing options is to either go and edit the `getHumanResponse.m` file, or to create a feature request.
 
