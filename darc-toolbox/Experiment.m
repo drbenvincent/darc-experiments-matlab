@@ -47,7 +47,6 @@ classdef Experiment
         %all_reaction_times
         human_response_options % key/value pairs... cell array of strings
         data_table
-        
         % string of optional text to include in the filename of saved
         % files. This will be used in addition to default information such
         % as the participant ID, date, time, and model name.
@@ -78,6 +77,7 @@ classdef Experiment
             userArgs.addParameter('expt_options', struct(), @isstruct)
             userArgs.addParameter('trials', 30, @isnumeric)
             userArgs.addParameter('human_response_options', {}, @iscellstr)
+            userArgs.addParameter('reward_type', 'real', @(x) any(strcmp(x,{'real','integer'})));
             userArgs.parse(varargin{:});
             
             obj.userArgs = userArgs.Results;
@@ -359,6 +359,14 @@ classdef Experiment
                     % injection by providing our own user-defined function
                     % in the Experiment constructor.
                     [prospectA, prospectB] = obj.model.design2prospects(chosen_design);
+                    
+                    % Set rewards of prospects to be integer, if we have
+                    % asked for that
+                    switch obj.userArgs.reward_type
+                        case{'integer'}
+                            prospectA.reward = round(prospectA.reward);
+                            prospectB.reward = round(prospectB.reward);
+                    end
                     
                     response_object = getHumanResponse(prospectA, prospectB,...
                         obj.human_response_options{:});

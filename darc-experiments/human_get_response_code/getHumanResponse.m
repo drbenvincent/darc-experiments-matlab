@@ -59,7 +59,11 @@ switch opts.commodity_type
 end
 
 % compose reward (eg $100, or 15 dohnuts)
-offerStr = [commodity.prefix sprintf('%.2f', prospect.reward) commodity.suffix];
+if rem(prospect.reward,1)==0 % integer valued reward
+    offerStr = [commodity.prefix sprintf('%d', prospect.reward) commodity.suffix];
+else % non-whole number reward
+    offerStr = [commodity.prefix sprintf('%.2f', prospect.reward) commodity.suffix];
+end
 
 %% Compose delay string
 switch opts.delay_framing
