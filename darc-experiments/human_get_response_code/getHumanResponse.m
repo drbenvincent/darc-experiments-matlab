@@ -49,6 +49,11 @@ switch opts.commodity_type
         commodity.prefix = '';
         commodity.suffix = ' bars of chocolate';
         
+    case{'presentation'}
+        % used in an experiment on social anxiety
+        commodity.prefix = 'presenting to a crowd of ';
+        commodity.suffix = ' people';
+        
     otherwise
         error('requested commodity_type not defined')
 end
