@@ -235,7 +235,7 @@ The input must be a cell array of strings which are key/value pairs. The options
 
 | option  | values |
 | ------------- | ------------- |
-| `'commodity_type'`  | `'USD'` [default], `'GBP'`, `'song_downloads'`, `'sex'`, `'chocolate bars'`  |
+| `'commodity_type'`  | `'USD'` [default], `'CAD'`, `'dollar'` `'GBP'`, `'Euro'`, `'song_downloads'`, `'sex'`, `'chocolate bars'`  |
 | `'delay_framing'`  | `'delay'` [default], `'date'`  |
 | `'prob_framing'`  | `'prob'` [default], `'odds'`  |
 

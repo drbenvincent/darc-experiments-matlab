@@ -29,12 +29,16 @@ function [optionString] = constructQuestionString(prospect, opts)
 
 %% Compose reward string
 switch opts.commodity_type
-    case{'USD'}
+    case{'USD', 'CAD', 'dollar'}
         commodity.prefix = '$';
         commodity.suffix = '';
         
     case{'GBP'}
-        commodity.prefix = '£';
+        commodity.prefix = 'ï¿½';
+        commodity.suffix = '';
+        
+    case{'Euro'}
+        commodity.prefix = char(8364);
         commodity.suffix = '';
         
     case{'song_downloads'}
