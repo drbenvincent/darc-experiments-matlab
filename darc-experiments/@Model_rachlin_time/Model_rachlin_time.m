@@ -25,7 +25,7 @@ classdef Model_rachlin_time < Model & ChoiceFuncPsychometric & experiment_type_d
             obj.params = {'k','s','alpha','epsilon'};
 
             % priors over parameters --------------------------------------
-            obj.priors.k = makedist('Exponential', 'mu', 0.2);
+            obj.priors.k = makedist('Exponential', 'mu', 0.04);
             obj.priors.s = makedist('Normal', 'mu',1, 'sigma', sqrt(0.5));
             obj.priors.s = truncate(obj.priors.s, 0, inf);
             
