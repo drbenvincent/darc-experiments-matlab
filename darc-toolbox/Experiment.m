@@ -80,6 +80,7 @@ classdef Experiment
             userArgs.addParameter('human_response_options', {}, @iscellstr);
             userArgs.addParameter('penalty_function', @default_penalty_function, @(x) isempty(x) || isa(x, 'function_handle'));
             userArgs.addParameter('reward_type', 'real', @(x) any(strcmp(x,{'real','integer'})));
+            userArgs.addParameter('heuristic_strategy_override',true,@islogical);
             userArgs.parse(varargin{:});
             
             obj.userArgs = userArgs.Results;
@@ -88,17 +89,25 @@ classdef Experiment
             % check provided model is a subclass of Model
             assert(isa(model,'Model'), 'Model must be a subclass of the Model class.')
             
-            obj.model                   = model; clear model
+            obj.model                   = model;             
+            clear model
             obj.human_response_options  = obj.userArgs.human_response_options;
-            obj.penalty_function = obj.userArgs.penalty_function;
             obj.all_reaction_times      = NaN(0,1);
             obj.expt_options            = setExperimentOptions(obj);
             obj.response_objects        = [];
             obj = setup_true_theta(obj);
             obj = update_model_with_true_theta_information(obj);
             obj = setup_prior_particles(obj);
+            obj.penalty_function = @calc_penalty;
             
-            
+            if obj.userArgs.heuristic_strategy_override
+                obj.model.heuristic_strategy = 'no_heuristic';
+            end
+                        
+            function penalty = calc_penalty(varargin)
+                penalty = obj.userArgs.penalty_function(@(x) obj.model.designs_to_design_ranks(x),varargin{:});
+            end
+                
             function obj = setup_prior_particles(obj)
                 previous_designs = [];
                 all_responses = NaN(0,1);
