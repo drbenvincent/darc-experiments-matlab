@@ -9,13 +9,13 @@ set(fh, 'WindowStyle','normal')
 set(fh, 'units','normalized','outerposition',[0 0 1 1]); 
 clf, drawnow
 nrows = 1;
-subplot_handles = layout([1; 2]');
+subplot_handles = layout([1; 2; 3]');
 drawnow
 
 
 %% Load data for the 3 example participants
 examples = makeExamples();
-examples = examples(1:2);
+examples = examples(1:3);
 
 
 %% Iterate over the 3 examples, plotting as we go
@@ -27,7 +27,7 @@ end
 
 % NOTE (x,y) position is in DATA units
 %% Add column titles (example name)
-top_plots = subplot_handles([1, 2]);
+top_plots = subplot_handles([1, 2, 3]);
 for n=1:numel(top_plots)
 	subplot(top_plots(n))
 	h = text(365/2, 1.25, examples(n).title);

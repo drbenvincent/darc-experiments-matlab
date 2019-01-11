@@ -1,7 +1,7 @@
 function SCRIPT_logk_uncertainty_reduction()
 
 addpath('darc-experiments')
-NRUNS = 500; % 500
+NRUNS = 16; % 500
 
 
 %% Sort figure and subpanel arrangement

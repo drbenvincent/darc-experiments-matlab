@@ -14,7 +14,8 @@ end
 sigma = base_sigma/size(previous_designs,1);
 
 if ~exist('lambda','var')
-    lambda = 2;
+    % Deliberately random to encourage diversity in our choices
+    lambda = gamrnd(2,1.5);
 end
 
 candidate_designs = convert_to_ranks(candidate_designs);
