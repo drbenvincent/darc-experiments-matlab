@@ -52,7 +52,7 @@ function [chosen_design, estimated_utilities, estimated_unpenalized_utilities] =
 %                      iteration (default = nT).  Must not be
 %                      more than the number of samples provided.  If less
 %                      then the order of the samples is randomly permuted
-%                      and the data then cycled through.  Default nT/10
+%                      and the data then cycled through.  Default nT
 %   n_steps (scalar) = Number of annealing steps to run the optimizer for.
 %                      Default 50;
 %   gamma (anonymous function with integer input) = Annealing schedule for 
