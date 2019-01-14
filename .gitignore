@@ -9,6 +9,7 @@
 *.fig
 *.png
 *.pdf
+*.csv
 
 saved_human_data/*
 saved_simulated_data/*
