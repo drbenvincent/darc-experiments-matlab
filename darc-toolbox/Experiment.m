@@ -46,6 +46,7 @@ classdef Experiment
         expt_options
         %all_reaction_times
         human_response_options % key/value pairs... cell array of strings
+        penalty_function
         data_table
         % string of optional text to include in the filename of saved
         % files. This will be used in addition to default information such
@@ -74,10 +75,12 @@ classdef Experiment
             userArgs.addParameter('plotting', 'end', @(x) any(strcmp(x,{'none','end','full','demo'})));
             userArgs.addParameter('save_path', fullfile(cd,'data'), @isstr);
             userArgs.addParameter('save_text', '', @isstr);
-            userArgs.addParameter('expt_options', struct(), @isstruct)
-            userArgs.addParameter('trials', 30, @isnumeric)
-            userArgs.addParameter('human_response_options', {}, @iscellstr)
+            userArgs.addParameter('expt_options', struct(), @isstruct);
+            userArgs.addParameter('trials', 30, @isnumeric);
+            userArgs.addParameter('human_response_options', {}, @iscellstr);
+            userArgs.addParameter('penalty_function', @default_penalty_function, @(x) isempty(x) || isa(x, 'function_handle'));
             userArgs.addParameter('reward_type', 'real', @(x) any(strcmp(x,{'real','integer'})));
+            userArgs.addParameter('heuristic_strategy_override',true,@islogical);
             userArgs.parse(varargin{:});
             
             obj.userArgs = userArgs.Results;
@@ -86,7 +89,8 @@ classdef Experiment
             % check provided model is a subclass of Model
             assert(isa(model,'Model'), 'Model must be a subclass of the Model class.')
             
-            obj.model                   = model; clear model
+            obj.model                   = model;             
+            clear model
             obj.human_response_options  = obj.userArgs.human_response_options;
             obj.all_reaction_times      = NaN(0,1);
             obj.expt_options            = setExperimentOptions(obj);
@@ -94,8 +98,16 @@ classdef Experiment
             obj = setup_true_theta(obj);
             obj = update_model_with_true_theta_information(obj);
             obj = setup_prior_particles(obj);
+            obj.penalty_function = @calc_penalty;
             
-            
+            if obj.userArgs.heuristic_strategy_override
+                obj.model.heuristic_strategy = 'no_heuristic';
+            end
+                        
+            function penalty = calc_penalty(varargin)
+                penalty = obj.userArgs.penalty_function(@(x) obj.model.designs_to_design_ranks(x),varargin{:});
+            end
+                
             function obj = setup_prior_particles(obj)
                 previous_designs = [];
                 all_responses = NaN(0,1);
@@ -291,7 +303,7 @@ classdef Experiment
             % must be called AFTER we've appended to previous_designs and all_responses
             obj = obj.updateBeliefs();
             
-            obj.export_current_point_estimates();
+            %obj.export_current_point_estimates();
             % Store summary data
             obj = obj.updateThetaRecord();
             
@@ -340,7 +352,7 @@ classdef Experiment
             
             % Do design optimisation over the set of designs being considered
             if nrows(designs_allowed) > 1
-                [chosen_design, design_utilties] = obj.do_design_optimisation(designs_allowed);
+                chosen_design = obj.do_design_optimisation(designs_allowed);
             else
                 warning('Skipping design optimisation: only 1 possible design provided')
                 chosen_design = designs_allowed;
@@ -415,7 +427,7 @@ classdef Experiment
                 % IE A VALUE CLASS.
                 log_predictive_y = @(theta,designs) obj.model.log_predictive_y(theta,designs);
                 [chosen_design, design_utilties] = discrete_smc_search_binary_output(...
-                    log_predictive_y, designs_allowed, obj.theta);
+                    log_predictive_y, designs_allowed, obj.theta, obj.previous_designs, obj.penalty_function);
                 % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 
                 % used for debugging only
@@ -508,7 +520,7 @@ classdef Experiment
             point_estimate_table = appendAUCprob(point_estimate_table);
             
             function point_estimate_table = appendAUCdelay(point_estimate_table, max_delay)
-                warning('Takes a short moment, so maybe don''t do this every trial')
+%                warning('Takes a short moment, so maybe don''t do this every trial')
                 AUC_delay = obj.model.calculateAUCdelay(max_delay, obj.theta);
                 % append column to table
                 if ~isempty(AUC_delay)
@@ -518,7 +530,7 @@ classdef Experiment
             end
             
             function point_estimate_table = appendAUCprob(point_estimate_table)
-                warning('Takes a short moment, so maybe don''t do this every trial')
+               % warning('Takes a short moment, so maybe don''t do this every trial')
                 AUC_prob = obj.model.calculateAUCprob(obj.theta);
                 % append column to table
                 if ~isempty(AUC_prob)

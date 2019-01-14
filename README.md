@@ -48,9 +48,9 @@ Feedback is very welcome. This can be done through:
 # Installation and quick start
 
 1. Get a local copy of the repository. If you are not so familiar with GitHub, then the easiest method is to download a `.zip`. Look for the big green button called "Clone or download".
-2. Set the Matlab path to the location of the `darc-experiments-matlab` folder you just downloaded.
+2. Add the location of the `darc-experiments-matlab` folder you just downloaded to the Matlab path using the `addpath` command. Probably the easiest way to do this (especially if working across mac's and PC's) is to put the repository in the [`userpath`](https://uk.mathworks.com/help/matlab/ref/userpath.html), as you can then just use `addpath(fullfile(userpath, 'darc-experiments-matlab')` which should work on both mac's and PC's.
 3. You must set up the Matlab environment by running the `env_setup()` function. But this only needs to be done once each time to start Matlab.
-4. Run the code below to run a simple delay discounting experiment, using hyperbolic discounting as the model being 'fitted'.
+4. Run the code below to run a simple delay discounting experiment, using hyperbolic discounting as the model whose parameters are being estimated.
 
 ```matlab
 % build a model object: include fixed parameter values
@@ -63,7 +63,7 @@ expt = Experiment(myModel);
 expt = expt.runTrials();
 ```
 
-If you get errors, ensure you have run `env_setup()` once upon loading Matlab.
+If you get errors, ensure you have done steps 2 and 3. It is easy to forget to run `env_setup()` for step 3.
 
 
 # Experiments available in the DARC toolbox
@@ -483,13 +483,11 @@ As well as being exported to disc, you can programmatically access the raw data 
       4×8 table
         D_A    P_A    R_B    D_B    P_B    R_A    R    reaction_time
         ___    ___    ___    ___    ___    ___    _    _____________
-        0      1      100    90     1      50     0    2.9743       
-        0      1      100    28     1      60     0    2.1513       
-        0      1      100    21     1      55     1    1.7055       
-        0      1      100    28     1      55     0    1.8099  
+        0      1      100    90     1      50     A    2.9743       
+        0      1      100    28     1      60     A    2.1513       
+        0      1      100    21     1      55     B    1.7055       
+        0      1      100    28     1      55     A    1.8099  
 
-Note that `R=0` means prospect A was chosen, and `R=1`
- means prospect B was chosen.
 
 # Analysing data
 This toolbox is designed for data collection. The toolbox does export estimated parameter estimates, and you can use these as data points in your larger experimental data file of multiple participants and conditions etc. However, the default priors over parameters used by the toolbox were chosen to be both general, but also give rise to stable and sensible estimates based upon an individual agent's data.

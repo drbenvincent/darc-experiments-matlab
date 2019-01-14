@@ -1,6 +1,7 @@
-function [chosen_design, estimated_utilities] = ...
+function [chosen_design, estimated_utilities, estimated_unpenalized_utilities] = ...
             discrete_smc_search_binary_output(log_predictive,candidate_designs,...
-            theta_samples,n_particles,n_steps,gamma,output_type_force,pD_min_prop)
+            theta_samples,previous_designs,penalty_function,...
+            n_particles,n_steps,gamma,output_type_force,pD_min_prop)
 %discrete_smc_search_binary_output
 %
 % function [chosen_design, estimated_utilities] = ...
@@ -36,14 +37,24 @@ function [chosen_design, estimated_utilities] = ...
 %                                   theta_samples therefore if things are
 %                                   going to slowly then may be advisable
 %                                   to use less samples.
-%   n_particles (scalar <= nT) = Number of theta samples to use at each
-%                      iteration (default = nT/10).  Must not be
-%                      more than the number of samples provided.  If less
-%                      then the order of the samples is randomly permuted
-%                      and the data then cycled through.
-%   n_steps (scalar) = Number of annealing steps to run the optimizer for.
 %
 % Optional inputs :
+%   previous_designs (? x dD array) = Array of previous designs.  Will be
+%                                     used by penalty_function.
+%                                     Empty by default
+%   penalty_function = Anonymous function that takes in previous
+%                                 designs (second input) and candidate 
+%                                 designs (first input) and returns
+%                                 a nDx1 array of penalty factors for how
+%                                 close that design is to previous points.
+%                                 By default, no penalty is applied.
+%   n_particles (scalar <= nT) = Number of theta samples to use at each
+%                      iteration (default = nT).  Must not be
+%                      more than the number of samples provided.  If less
+%                      then the order of the samples is randomly permuted
+%                      and the data then cycled through.  Default nT
+%   n_steps (scalar) = Number of annealing steps to run the optimizer for.
+%                      Default 50;
 %   gamma (anonymous function with integer input) = Annealing schedule for 
 %           the  optimization.  At step n+1 we sample designs in proportion 
 %           to U.^gamma(n).  Thus the larger gamma(n) is the more 
@@ -77,9 +88,12 @@ function [chosen_design, estimated_utilities] = ...
 %
 % Outputs :
 %   chosen_design (1 x dD row vector) = The chosen "optimal" design
-%   estimated_utilities (nD x 1 column vector) = The estimated value of the
-%            utility for each design.  Accuracy will be more accurate in
+%   estimated_utilities (nD x 1 column vector) = 
+%            The estimated value of the utility for each design including
+%            the penalty factor.  Accuracy will be more accurate in
 %            the regions near the maximum
+%   estimated_unpenalized_utilities (nD x 1 column vector) = 
+%            As above without the penalty factors
 %
 % TODO: Also write the case for non binary outputs (this will need to be
 % written with some noticeable differences)
@@ -105,8 +119,16 @@ U = (1/nD)*ones(nD,1); % This will keep track of "target" function for the
 n_times_sampled = zeros(nD,1); % Tracks number of times a design was sampled
 p_y_given_D = 0.5*ones(nD,1); % Tracks a running estimate of p(y | D)
 
+if ~exist('previous_designs','var')
+    previous_designs = [];
+end
+
+if ~exist('penalty_function','var')
+    penalty_function = [];
+end
+
 if ~exist('n_particles','var') || isempty(n_particles)
-    n_particles = nT/10;
+    n_particles = nT;
 else
     assert(n_particles<=nT,'n_particles must be less than or equal to nT');
 end
@@ -128,6 +150,12 @@ if ~exist('pD_min_prop','var') || isempty(pD_min_prop)
 end
 
 pD_min = pD_min_prop/nD;
+
+if ~isempty(previous_designs) && ~isempty(penalty_function)
+    penalty_factors = penalty_function(candidate_designs,previous_designs);
+else
+    penalty_factors = ones(nD,1);
+end
 
 % Randomly permute the samples so that if not using all of them then there
 % is not a bias originating from the ordering
@@ -203,13 +231,16 @@ for nSam=1:n_steps
     U_iter_times_n_samples = zeros(nD,1); % Need to start with placeholder as accumarray can be undersized
     U_iter_times_n_samples(1:max_i_sampled) = (accumarray(iSamples,U_theta)); 
     % TODO: calculate more than just the mean to calculate probability the point is the maximum
-    
+   
+    % Apply the penalty factors
+    U_iter_times_n_samples = U_iter_times_n_samples.*penalty_factors;
+
     % Update the running estimate of U for each point
     b_some_samples = (n_times_sampled+n_times_sampled_iter)>0;
     U = (U.*n_times_sampled+U_iter_times_n_samples)./(n_times_sampled+n_times_sampled_iter);
     U(~b_some_samples) = 1/nD;
     U(U<0) = 0; % guard against numerical error
-    
+            
     % Update the counts of times the design was sampled
     n_times_sampled = n_times_sampled+n_times_sampled_iter;
 end
@@ -235,5 +266,6 @@ end
 
 % Choose the design for which pD is maximal
 estimated_utilities = U;
-[~,iTake] = max(U);
+estimated_unpenalized_utilities = U./penalty_factors;
+[~,iTake] = max(estimated_utilities);
 chosen_design = candidate_designs(iTake,:);
