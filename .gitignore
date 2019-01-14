@@ -4,6 +4,11 @@
 *.bbl
 *.gz
 *.DS_Store
+*.asv
+*.mat
+*.fig
+*.png
+*.pdf
 
 saved_human_data/*
 saved_simulated_data/*
