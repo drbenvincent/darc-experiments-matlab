@@ -45,6 +45,12 @@ setAllSubplotOptions(gcf, {'LineWidth', 1.5, 'FontSize',12})
 %export_fig('figs/logk_comparison_of_models', '-pdf')
 %export_fig('figs/logk_comparison_of_models', '-png', '-m6');
 
+%% Second experiment
+
+myModel = Model_hyperbolic1ME_time('epsilon', 0.01);
+expt = Experiment(myModel,'agent', 'simulated_agent','true_theta', struct('m', -0.5, 'c', -5, 'alpha', 0.5));
+expt = expt.runTrials();
+
 end
 
 
