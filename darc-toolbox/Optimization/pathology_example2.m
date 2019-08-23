@@ -1,30 +1,29 @@
-% Quadratic model with cubic outputs 
+% Sanity check that will sample where the output noise is lowest
 
 clear all
 close all
 
-f_true = @(d) d.^3-d;
+f_true = @(d) cos(d);
+noise_model = @(d) 0.05+abs(d);
 
 % Prior
-log_prior_pdf = @(theta) sum(log(normpdf(theta,zeros(1,3),ones(1,3))),2);
-out_noise = 0.25;
-f_quad = @(theta,d) theta(:,1).*d.^2+theta(:,2).*d+theta(:,3);
-log_likelihood = @(theta,d,y) log(normpdf(y,f_quad(theta,d),out_noise));
-predict_sampler = @(theta,d) randn(size(theta,1),1).*out_noise+f_quad(theta,d);
-true_out_sampler = @(d) f_true(d)+out_noise*randn(size(d));
+log_prior_pdf = @(theta) log(normpdf(theta));
+log_likelihood = @(theta,d,y) log(normpdf(y,theta,noise_model(d)));
+predict_sampler = @(theta,d) randn(size(theta,1),1).*(noise_model(d))+theta;
+true_out_sampler = @(d) f_true(d)+randn(size(d)).*(noise_model(d));
 p_log_pdf = @(theta, data) log_prior_pdf(theta)+sum(log_likelihood(theta, data(1,:), data(2,:)),2);
 
-N = 1.5e5;
-n_iter = 6;
-n_designs = 21;
+N = 2e4;
+n_iter = 5;
+n_designs = 11;
 n_pmc_steps = 100;
 pmc_step_size = 1;
 
-allowable_designs = linspace(-2,2,n_designs);
+allowable_designs = linspace(-pi,pi,n_designs);
 designs = NaN(n_iter,1);
 outputs = NaN(n_iter,1);
 EIGs = NaN(n_iter,n_designs);
-thetas = randn(N,3);
+thetas = randn(N,1);
 
 for t=1:n_iter
     [designs(t),EIGs(t,:)] = choose_next_design(allowable_designs,thetas,log_likelihood,predict_sampler);
@@ -39,6 +38,27 @@ for n=1:n_iter
 subplot(ceil(n_iter/5),5,n); 
 plot(allowable_designs,EIGs(n,:));
 end
+
+line_width = 3;
+font_size = 30;
+marker_size = 20;
+axlim = [-2,2];
+%aylim = [-1.2,1.2];
+interpreter = 'latex';
+
+figure('units','normalized','outerposition',[0 0 1 1]);
+hold on;
+for n=1:5
+plot(allowable_designs,EIGs(n,:),'LineWidth',line_width);
+end
+xlabel('Design','Interpreter',interpreter);
+ylabel('EIG','Interpreter',interpreter);
+legend({'$t=1$','$t=2$','$t=3$','$t=4$','$t=5$'},'Interpreter',interpreter,'Location','North');
+xlim(axlim);
+%ylim(aylim);
+set(gca,'FontSize',font_size);
+set(gca,'TickLabelInterpreter','latex')
+legend boxoff
 
 function [design,EIGs] = choose_next_design(allowable_designs,thetas,log_likelihood,predict_sampler)
 
