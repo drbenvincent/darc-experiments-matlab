@@ -63,14 +63,29 @@ if ~exist('b_display','var') || isempty(b_display)
     b_display = false;
 end
 
-scale_walk = scale_walk_factor.*std(theta_start,[],1);
+% Old approach that uses a diagonal covariance matrix.
+ 
+% scale_walk = scale_walk_factor.*std(theta_start,[],1);
+% 
+% if strcmpi(step_type,'normal')
+%     q_log_pdf = @(x1,x2) sum(log(normpdf(bsxfun(@rdivide,(x1-x2),scale_walk),0,1)),2);
+%     q_sample = @(x_old) bsxfun(@times,randn(size(x_old)),scale_walk)+x_old;
+% else
+%     q_log_pdf = @(x1,x2) sum(log(tpdf(bsxfun(@rdivide,(x1-x2),scale_walk),nu)),2);
+%     q_sample = @(x_old) bsxfun(@times,trnd(nu,size(x_old)),scale_walk)+x_old;
+% end
+
+% Code for using full covariance matrix.
+
+scale_walk = (scale_walk_factor.^2).*cov(theta_start);
 
 if strcmpi(step_type,'normal')
-    q_log_pdf = @(x1,x2) sum(log(normpdf(bsxfun(@rdivide,(x1-x2),scale_walk),0,1)),2);
-    q_sample = @(x_old) bsxfun(@times,randn(size(x_old)),scale_walk)+x_old;
+    q_log_pdf = @(x1,x2) log(mvnpdf(x1,x2,scale_walk));
+    q_sample = @(x_old) mvnrnd(x_old,scale_walk);
 else
-    q_log_pdf = @(x1,x2) sum(log(tpdf(bsxfun(@rdivide,(x1-x2),scale_walk),nu)),2);
-    q_sample = @(x_old) bsxfun(@times,trnd(nu,size(x_old)),scale_walk)+x_old;
+    chol_scale_walk = chol(scale_walk);
+    q_log_pdf = @(x1,x2) sum(log(tpdf(((x1-x2)/chol_scale_walk),nu)),2);
+    q_sample = @(x_old) trnd(nu,size(x_old))*chol_scale_walk+x_old;
 end
 
 [theta, log_Z] = pmc(p_log_pdf,q_log_pdf,q_sample,theta_start,n_steps,b_display, data);
